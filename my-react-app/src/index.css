@@ -1,0 +1,230 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.primary.300') theme('colors.academic.100');
+  }
+  
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: theme('colors.academic.100');
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: theme('colors.primary.300');
+    border-radius: 20px;
+    border: 2px solid theme('colors.academic.100');
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.primary.400');
+  }
+  
+  body {
+    @apply bg-academic-50 text-academic-900 leading-relaxed;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    @apply font-semibold tracking-tight text-academic-900;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl;
+  }
+
+  h6 {
+    @apply text-base md:text-lg;
+  }
+
+  p {
+    @apply text-academic-700 leading-relaxed;
+  }
+
+  a {
+    @apply text-primary-600 hover:text-primary-700 transition-colors duration-200;
+  }
+
+  /* Focus states */
+  *:focus {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-academic hover:shadow-academic-lg transform hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-academic-100 hover:bg-academic-200 text-academic-700 font-medium py-3 px-6 rounded-lg transition-all duration-200 border border-academic-200 hover:border-academic-300;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-academic border border-academic-100 p-8 transition-all duration-200 hover:shadow-academic-lg;
+  }
+
+  .academic-section {
+    @apply py-16 px-4 sm:px-6 lg:px-8;
+  }
+
+  .academic-container {
+    @apply max-w-7xl mx-auto;
+  }
+
+  .academic-text {
+    @apply text-academic-700 leading-relaxed;
+  }
+
+  .academic-heading {
+    @apply font-serif font-semibold tracking-tight text-academic-900;
+  }
+
+  .nav-link {
+    @apply relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105;
+  }
+
+  .nav-link-active {
+    @apply text-primary-600 bg-primary-50 border border-primary-200 shadow-sm;
+  }
+
+  .nav-link-inactive {
+    @apply text-academic-700 hover:text-primary-600 hover:bg-academic-100;
+  }
+
+  .mobile-menu-item {
+    @apply block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 transform;
+  }
+
+  .mobile-menu-item-active {
+    @apply text-primary-600 bg-primary-50 border border-primary-200 scale-105;
+  }
+
+  .mobile-menu-item-inactive {
+    @apply text-academic-700 hover:text-primary-600 hover:bg-academic-100 hover:scale-105;
+  }
+
+  /* Enhanced smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    overflow-y: scroll; /* Always show vertical scrollbar to prevent layout shifts */
+  }
+  
+  /* Disable parallax on mobile for better performance */
+  @media (max-width: 768px) {
+    .parallax-bg {
+      background-attachment: scroll;
+    }
+  }
+
+  /* Enhanced parallax effect utilities */
+  .parallax-bg {
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    will-change: transform; /* Optimize for animations */
+    -webkit-backface-visibility: hidden; /* Prevent flickering on some browsers */
+    backface-visibility: hidden;
+  }
+  
+  /* For elements using Framer Motion parallax */
+  .parallax-element {
+    will-change: transform;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+  }
+
+  /* Custom animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+  }
+}
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  @keyframes tilt {
+    0%, 100% {
+      transform: rotate(-2deg) translateY(-2px);
+    }
+    25% {
+      transform: rotate(0deg) translateY(0px);
+    }
+    50% {
+      transform: rotate(2deg) translateY(-1px);
+    }
+    75% {
+      transform: rotate(0deg) translateY(-3px);
+    }
+  }
+
+  .animate-tilt {
+    animation: tilt 6s ease-in-out infinite;
+  }
+}

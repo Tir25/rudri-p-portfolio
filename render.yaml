@@ -1,0 +1,47 @@
+services:
+  # Backend API Service
+  - type: web
+    name: rd-portfolio-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        value: rudridave1998@gmail.com
+      - key: ADMIN_PASSWORD
+        value: 19111998
+
+  # Frontend Service
+  - type: web
+    name: rd-portfolio-frontend
+    env: static
+    plan: free
+    buildCommand: cd my-react-app && npm install && npm run build
+    staticPublishPath: ./my-react-app/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://rd-portfolio-backend.onrender.com
+      - key: VITE_APP_NAME
+        value: RD Portfolio
+
+databases:
+  - name: rd-portfolio-db
+    databaseName: rd_portfolio
+    user: rd_user
