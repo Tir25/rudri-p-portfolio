@@ -10,7 +10,7 @@
 import config from '../config';
 
 // API base URL from configuration
-const API_BASE_URL = config.api.baseUrl;
+const API_BASE_URL = config.api.baseUrl.replace(/\/$/, '');
 
 // Add a function to check if the user is authenticated by cookie
 async function checkAuthCookie(): Promise<boolean> {

@@ -87,10 +87,21 @@ EXECUTE FUNCTION update_timestamp();
 
 -- Insert default settings
 INSERT INTO settings (key, value, description)
-VALUES 
-  ('site_title', 'Rudri Dave', 'Website title'),
-  ('site_description', 'Personal website and research papers', 'Website description'),
-  ('contact_email', 'admin@rudri.com', 'Contact email address'),
-  ('enable_blog', 'true', 'Enable blog functionality'),
-  ('enable_papers', 'true', 'Enable research papers functionality')
-ON CONFLICT (key) DO NOTHING;
+SELECT 'site_title', 'Rudri Dave', 'Website title'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'site_title');
+
+INSERT INTO settings (key, value, description)
+SELECT 'site_description', 'Personal website and research papers', 'Website description'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'site_description');
+
+INSERT INTO settings (key, value, description)
+SELECT 'contact_email', 'admin@rudri.com', 'Contact email address'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'contact_email');
+
+INSERT INTO settings (key, value, description)
+SELECT 'enable_blog', 'true', 'Enable blog functionality'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'enable_blog');
+
+INSERT INTO settings (key, value, description)
+SELECT 'enable_papers', 'true', 'Enable research papers functionality'
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'enable_papers');

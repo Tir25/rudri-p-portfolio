@@ -6,7 +6,7 @@
 const config = {
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:4000',
+    baseUrl: (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/$/, ''),
     // Auto-detect HTTPS in production
     secure: import.meta.env.PROD || import.meta.env.VITE_API_URL?.startsWith('https'),
   },

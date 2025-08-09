@@ -15,8 +15,9 @@ async function initDatabase() {
     
     // Read and execute schema
     console.log('📋 Creating database schema...');
-    // Execute schema using absolute path relative to this file's directory
-    await db.executeFile(path.join('..', 'models', 'schema.sql'));
+    // Execute schema using absolute path relative to backend directory
+    const schemaPath = path.join(__dirname, 'models', 'schema.sql');
+    await db.executeFile(schemaPath);
     console.log('✅ Schema created successfully');
     
     // Check if admin user exists

@@ -41,7 +41,8 @@ async function main() {
     // Ensure core schema (functions/tables) exists before running migrations
     try {
       console.log('📋 Ensuring base schema exists...');
-      await db.executeFile(path.join('..', 'models', 'schema.sql'));
+      const schemaPath = path.join(__dirname, 'models', 'schema.sql');
+      await db.executeFile(schemaPath);
       console.log('✅ Base schema ensured');
     } catch (schemaErr) {
       console.error('❌ Failed to ensure base schema:', schemaErr.message);
