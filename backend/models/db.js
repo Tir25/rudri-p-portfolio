@@ -18,16 +18,18 @@ const hasPgDiscreteEnv = !!(
   process.env.PGHOST || process.env.PGDATABASE || process.env.PGUSER
 );
 
-if (process.env.DATABASE_URL) {
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+if (connectionString) {
   // Prefer single connection string if provided by the platform (Railway/Heroku)
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     connectionTimeoutMillis: 10000,
     idleTimeoutMillis: 30000,
     max: 20,
     ssl: sslConfig,
   });
-  console.log('🟢 Using DATABASE_URL for PostgreSQL connection');
+  console.log('🟢 Using connection string env for PostgreSQL connection');
 } else if (hasPgDiscreteEnv) {
   // Support discrete PG* environment variables
   pool = new Pool({
