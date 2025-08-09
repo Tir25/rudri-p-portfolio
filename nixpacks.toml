@@ -5,8 +5,8 @@ nixPkgs = ["nodejs_18"]
 
 [phases.install]
 cmds = [
-  "npm ci",
-  "npm --prefix backend ci"
+  "npm install",
+  "npm --prefix backend install"
 ]
 
 [phases.build]
