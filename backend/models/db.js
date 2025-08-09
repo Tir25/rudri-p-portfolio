@@ -18,7 +18,12 @@ const hasPgDiscreteEnv = !!(
   process.env.PGHOST || process.env.PGDATABASE || process.env.PGUSER
 );
 
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.RAILWAY_DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL_NON_POOLING;
 
 if (connectionString) {
   // Prefer single connection string if provided by the platform (Railway/Heroku)
