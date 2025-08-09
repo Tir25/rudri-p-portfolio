@@ -1,0 +1,17 @@
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_18"]
+
+[phases.install]
+cmds = [
+  "npm ci",
+  "npm --prefix backend ci"
+]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "npm --prefix backend run start"
+

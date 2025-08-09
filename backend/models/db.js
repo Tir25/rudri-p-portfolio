@@ -14,8 +14,12 @@ const config = require('../config');
 let pool;
 const sslConfig = config.database.ssl ? { rejectUnauthorized: false } : false;
 
+const hasPgDiscreteEnv = !!(
+  process.env.PGHOST || process.env.PGDATABASE || process.env.PGUSER
+);
+
 if (process.env.DATABASE_URL) {
-  // Prefer single connection string if provided by the platform
+  // Prefer single connection string if provided by the platform (Railway/Heroku)
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     connectionTimeoutMillis: 10000,
@@ -23,8 +27,23 @@ if (process.env.DATABASE_URL) {
     max: 20,
     ssl: sslConfig,
   });
+  console.log('🟢 Using DATABASE_URL for PostgreSQL connection');
+} else if (hasPgDiscreteEnv) {
+  // Support discrete PG* environment variables
+  pool = new Pool({
+    host: process.env.PGHOST || config.database.host,
+    port: Number(process.env.PGPORT) || config.database.port,
+    user: process.env.PGUSER || config.database.user,
+    password: process.env.PGPASSWORD || config.database.password,
+    database: process.env.PGDATABASE || config.database.name,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    max: 20,
+    ssl: sslConfig,
+  });
+  console.log('🟡 Using discrete PG* environment variables for PostgreSQL connection');
 } else {
-  // Fall back to discrete env/config variables
+  // Fall back to config (likely local dev)
   pool = new Pool({
     host: config.database.host,
     port: config.database.port,
@@ -36,6 +55,7 @@ if (process.env.DATABASE_URL) {
     max: 20,
     ssl: sslConfig,
   });
+  console.log('🟠 Using config-based PostgreSQL connection (likely local dev)');
 }
 
 // Monitor the pool events
