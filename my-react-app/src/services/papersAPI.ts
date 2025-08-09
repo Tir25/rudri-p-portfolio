@@ -55,11 +55,10 @@ const papersAPI = {
     return `/api/papers/${id}/download`;
   },
 
-  // Sync papers with external source (if needed)
+  // Sync papers with external source (if needed) — endpoint not implemented server-side
+  // Leaving a no-op to avoid build errors if imported
   syncPapers: async () => {
-    return fetchWithAuth('/api/papers/sync', {
-      method: 'POST',
-    });
+    return { success: false, message: 'Not implemented' } as const;
   },
 };
 

@@ -10,22 +10,33 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 
-// Create a connection pool with configuration from config
-const pool = new Pool({
-  host: config.database.host,
-  port: config.database.port,
-  user: config.database.user,
-  password: config.database.password,
-  database: config.database.name,
-  // Connection settings
-  connectionTimeoutMillis: 10000, // 10 seconds
-  idleTimeoutMillis: 30000, // 30 seconds before idle clients are closed
-  max: 20, // Maximum number of clients in the pool
-  // SSL configuration (if needed)
-  ssl: config.database.ssl ? {
-    rejectUnauthorized: false // Set to true in production with proper certificates
-  } : false
-});
+// Create a connection pool with configuration from config or DATABASE_URL (Railway/Heroku style)
+let pool;
+const sslConfig = config.database.ssl ? { rejectUnauthorized: false } : false;
+
+if (process.env.DATABASE_URL) {
+  // Prefer single connection string if provided by the platform
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    max: 20,
+    ssl: sslConfig,
+  });
+} else {
+  // Fall back to discrete env/config variables
+  pool = new Pool({
+    host: config.database.host,
+    port: config.database.port,
+    user: config.database.user,
+    password: config.database.password,
+    database: config.database.name,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+    max: 20,
+    ssl: sslConfig,
+  });
+}
 
 // Monitor the pool events
 pool.on('connect', (client) => {

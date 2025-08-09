@@ -24,11 +24,11 @@ async function listPapers(req, res) {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;
     
-    // Use upload_date instead of created_at for ordering
+    // Order by created_at (matches migration schema)
     const query = `
       SELECT * FROM papers
       ${category && category !== 'all' ? 'WHERE category = $1' : ''}
-      ORDER BY upload_date DESC
+      ORDER BY created_at DESC
       LIMIT $${category && category !== 'all' ? '2' : '1'} OFFSET $${category && category !== 'all' ? '3' : '2'}
     `;
     
@@ -110,12 +110,12 @@ async function createPaper(req, res) {
       title,
       authors: authorsArray,
       abstract: abstract || null,
-      keywords: keywordsArray,
       category: category || null,
       file_path: req.file.path,
+      file_name: req.file.originalname,
+      file_size: req.file.size,
+      mime_type: req.file.mimetype,
       published: true,
-      uploaded_by: req.user ? req.user.id : null,
-      upload_date: new Date()
     };
     
     const paper = await dbUtils.create('papers', paperData);

@@ -5,6 +5,7 @@
  */
 
 const bcrypt = require('bcrypt');
+const path = require('path');
 const db = require('./models/db');
 const config = require('./config');
 
@@ -14,7 +15,8 @@ async function initDatabase() {
     
     // Read and execute schema
     console.log('📋 Creating database schema...');
-    await db.executeFile('../models/schema.sql');
+    // Execute schema using absolute path relative to this file's directory
+    await db.executeFile(path.join('..', 'models', 'schema.sql'));
     console.log('✅ Schema created successfully');
     
     // Check if admin user exists

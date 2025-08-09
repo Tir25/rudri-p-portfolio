@@ -190,8 +190,8 @@ async function count(table, filters = {}) {
  */
 async function exists(table, filters = {}) {
   try {
-    const count = await this.count(table, filters);
-    return count > 0;
+    const totalMatchingRecords = await count(table, filters);
+    return totalMatchingRecords > 0;
   } catch (error) {
     console.error(`Error checking if ${table} exists:`, error);
     throw error;

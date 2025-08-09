@@ -16,6 +16,7 @@
  */
 
 require('dotenv').config();
+const path = require('path');
 const migration = require('./models/migration');
 const db = require('./models/db');
 
@@ -36,6 +37,16 @@ async function main() {
     }
     
     console.log('✅ Database connection successful');
+
+    // Ensure core schema (functions/tables) exists before running migrations
+    try {
+      console.log('📋 Ensuring base schema exists...');
+      await db.executeFile(path.join('..', 'models', 'schema.sql'));
+      console.log('✅ Base schema ensured');
+    } catch (schemaErr) {
+      console.error('❌ Failed to ensure base schema:', schemaErr.message);
+      process.exit(1);
+    }
     
     // Run command
     switch (command) {
@@ -57,7 +68,14 @@ async function main() {
     process.exit(1);
   } finally {
     // Close database connection
-    await db.pool.end();
+    try {
+      const pool = db.getPool ? db.getPool() : db.pool;
+      if (pool && typeof pool.end === 'function') {
+        await pool.end();
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 }
 

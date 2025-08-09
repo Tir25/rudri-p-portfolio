@@ -4,7 +4,8 @@
   "description": "Backend API for Rudri's website",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node migrate.js up && node server.js",
+    "start:server": "node server.js",
     "dev": "nodemon server.js",
     "init-db": "node init-db.js",
     "setup-db": "node setup-db.js",

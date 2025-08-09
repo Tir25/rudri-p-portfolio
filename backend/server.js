@@ -150,7 +150,8 @@ const gracefulShutdown = (signal) => {
     console.log('✅ HTTP server closed');
     
     // Close database connection
-    db.pool.end(() => {
+    const pool = db.getPool ? db.getPool() : db.pool;
+    pool.end(() => {
       console.log('✅ Database connection closed');
       console.log('👋 Server shutdown complete');
       process.exit(0);
