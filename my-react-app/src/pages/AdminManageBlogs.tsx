@@ -56,7 +56,7 @@ export default function AdminManageBlogs() {
           try {
             const parsedBlogs = JSON.parse(cachedBlogs);
             setBlogs(parsedBlogs);
-            toast.warning('Showing cached blogs (offline mode)');
+            toast('Showing cached blogs (offline mode)');
             console.log(`📱 Loaded ${parsedBlogs.length} cached blogs`);
           } catch (parseError) {
             console.error('❌ Failed to parse cached blogs:', parseError);

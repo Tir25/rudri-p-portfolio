@@ -29,7 +29,7 @@ export default function AdminSyncPapers() {
         { type: 'info', message: 'Paper synchronization feature is not yet implemented.' },
         { type: 'info', message: 'This feature will be available in a future update.' }
       ]);
-      toast.info('Paper synchronization feature coming soon');
+      toast('Paper synchronization feature coming soon');
     } catch (error) {
       console.error('Sync error:', error);
       toast.error('Failed to sync papers');

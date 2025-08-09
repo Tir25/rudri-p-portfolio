@@ -19,7 +19,7 @@ const generateSlug = (title: string) => {
     .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .trim('-'); // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
   
   // Add timestamp to make it unique
   const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
