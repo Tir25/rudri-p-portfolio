@@ -1,370 +1,328 @@
-import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
-import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  DocumentTextIcon, 
-  TagIcon, 
-  PhotoIcon,
-  ExclamationCircleIcon,
-  ArrowLeftIcon
-} from '@heroicons/react/24/outline';
-import { useAuthContext } from '../context/AuthContext';
-import blogsAPI from '../services/blogsAPI';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
-// Types
-interface BlogFormValues {
-  title: string;
-  content: string;
-  tags: string;
-  published: boolean;
-}
-
-interface BlogData {
-  id: number;
-  title: string;
-  content: string;
-  slug: string;
-  tags: string[];
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { getBlog, updateBlog, deleteBlogImage, type UpdateBlogData, type Blog } from '../services/supabaseBlogService';
 
 export default function AdminEditBlog() {
-  const { id } = useParams<{ id: string }>();
+  const { blogId } = useParams<{ blogId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthContext();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isImageRemoved, setIsImageRemoved] = useState(false);
-  const [blogData, setBlogData] = useState<BlogData | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // React Hook Form
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<BlogFormValues>({
-    defaultValues: {
-      title: '',
-      content: '',
-      tags: '',
-      published: true
-    }
+  const [blog, setBlog] = useState<Blog | null>(null);
+  const [formData, setFormData] = useState<UpdateBlogData>({
+    title: '',
+    content: '',
+    slug: '',
+    tags: [],
+    published: true
   });
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // Fetch blog post data
-  useEffect(() => {
-    const fetchBlogPost = async () => {
-      if (!id || !user) return;
-      
-      try {
-        setIsLoading(true);
-        console.log('🔍 Fetching blog with ID:', id);
-        
-        // Fetch real blog data from API
-        const response = await blogsAPI.getBlogById(id);
-        console.log('✅ Blog data received:', response);
-        
-        if (response) {
-          setBlogData(response);
-          
-          // Set form values
-          setValue('title', response.title);
-          setValue('content', response.content || '');
-          setValue('tags', response.tags ? response.tags.join(', ') : '');
-          setValue('published', response.published);
-          
-          console.log('✅ Form populated with blog data');
-        } else {
-          console.error('❌ Blog not found');
-          toast.error('Blog not found');
-          navigate('/admin/manage-blogs');
-        }
-        
-      } catch (error) {
-        console.error('❌ Error fetching blog post:', error);
-        toast.error('Failed to load blog post');
-        navigate('/admin/manage-blogs');
-      } finally {
-        setIsLoading(false);
+  const loadBlog = useCallback(async () => {
+    try {
+      setLoading(true);
+      const blogData = await getBlog(blogId!);
+      if (!blogData) {
+        setError('Blog not found');
+        return;
       }
-    };
-    
-    fetchBlogPost();
-  }, [id, user, setValue, navigate]);
+      setBlog(blogData);
+      setFormData({
+        title: blogData.title,
+        content: blogData.content,
+        slug: blogData.slug,
+        tags: blogData.tags,
+        published: blogData.published
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load blog');
+    } finally {
+      setLoading(false);
+    }
+  }, [blogId]);
 
-  // Handle image selection
+  useEffect(() => {
+    if (blogId) {
+      loadBlog();
+    }
+  }, [blogId, loadBlog]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+    setFormData(prev => ({
+      ...prev,
+      tags
+    }));
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
-      setIsImageRemoved(false);
-      // Create a preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setCoverImage(file);
     }
   };
 
-  // Clear image
-  const handleClearImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setIsImageRemoved(true);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-  
-  // Submit form
-  const onSubmit = async (data: BlogFormValues) => {
-    if (!user || !id) {
-      toast.error('You must be logged in to update a blog post');
-      return;
-    }
-    
-    setIsSaving(true);
-    
+  const handleRemoveImage = async () => {
+    if (!blog) return;
+
     try {
-      console.log('🚀 Starting blog update process...');
-      console.log('📝 Form data:', data);
-      console.log('🆔 Blog ID:', id);
-      
-      // Generate slug from title
-      const slug = data.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with single
-        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-      
-      console.log('🔗 Generated slug:', slug);
-      
-      // Prepare blog data
-      const blogData = {
-        title: data.title,
-        content: data.content,
-        slug: slug,
-        tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
-        published: data.published,
-        updated_at: new Date().toISOString()
-      };
-      
-      console.log('📦 Blog data to send:', blogData);
-      
-      // Update blog via API
-      console.log('🌐 Making API call to update blog...');
-      const response = await blogsAPI.updateBlog(id!, blogData);
-      console.log('✅ API response:', response);
-      
-      // Handle image upload if new image is selected
-      if (imageFile) {
-        console.log('🖼️ Uploading new cover image...');
-        const formData = new FormData();
-        formData.append('image', imageFile);
-        formData.append('blogId', id);
-        
-        const imageResponse = await blogsAPI.uploadBlogImage(formData);
-        console.log('✅ Image upload response:', imageResponse);
-      }
-      
-      toast.success('Blog post updated successfully!');
-      console.log('🎉 Blog update completed successfully');
-      
-      // Navigate to blog management
-      setTimeout(() => {
-        navigate('/admin/manage-blogs');
-      }, 1500);
-      
-    } catch (error) {
-      console.error('❌ Error updating blog:', error);
-      toast.error('Failed to update blog post. Please try again.');
-    } finally {
-      setIsSaving(false);
+      const updatedBlog = await deleteBlogImage(blog.id);
+      setBlog(updatedBlog);
+      setSuccess('Cover image removed successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove image');
     }
   };
 
-  if (isLoading) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blog) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const updateData: UpdateBlogData = {
+        ...formData,
+        cover_image: coverImage || undefined
+      };
+
+      const updatedBlog = await updateBlog(blog.id, updateData);
+      setBlog(updatedBlog);
+      setSuccess('Blog updated successfully!');
+      setCoverImage(null);
+      
+      // Reset file input
+      const fileInput = document.getElementById('cover-image') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update blog');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-academic-lg p-8 flex justify-center items-center min-h-[400px]">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-          <p className="mt-4 text-academic-600 font-medium">Loading post...</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-academic-900">Edit Blog</h1>
+          <p className="text-academic-600">Loading blog data...</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="animate-pulse">
+            <div className="h-4 bg-academic-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-10 bg-academic-100 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!blog) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-academic-900">Edit Blog</h1>
+          <p className="text-academic-600">Blog not found</p>
+        </div>
+        <div className="bg-white shadow rounded-lg p-6">
+          <p className="text-academic-600">The blog you're looking for doesn't exist or you don't have permission to edit it.</p>
+          <button
+            onClick={() => navigate('/admin/manage-blogs')}
+            className="mt-4 px-4 py-2 bg-academic-600 text-white rounded-md hover:bg-academic-700 focus:outline-none focus:ring-2 focus:ring-academic-500"
+          >
+            Back to Manage Blogs
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-academic-lg border border-academic-100">
-      <div className="px-6 py-8">
-        <div className="flex items-center mb-6 border-b border-academic-100 pb-3">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-academic-900">Edit Blog</h1>
+          <p className="text-academic-600">Update your blog post</p>
+        </div>
+        <button
+          onClick={() => navigate('/admin/manage-blogs')}
+          className="px-4 py-2 border border-academic-300 text-academic-700 rounded-md hover:bg-academic-50 focus:outline-none focus:ring-2 focus:ring-academic-500"
+        >
+          Back to Manage Blogs
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+          {success}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-academic-700 mb-2">
+            Title *
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            value={formData.title}
+            onChange={handleInputChange}
+            required
+            className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-academic-500 focus:border-transparent"
+            placeholder="Enter blog title"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="slug" className="block text-sm font-medium text-academic-700 mb-2">
+            Slug
+          </label>
+          <input
+            type="text"
+            id="slug"
+            name="slug"
+            value={formData.slug}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-academic-500 focus:border-transparent"
+            placeholder="blog-post-url-slug"
+          />
+          <p className="text-sm text-academic-500 mt-1">
+            Leave empty to auto-generate from title
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="content" className="block text-sm font-medium text-academic-700 mb-2">
+            Content *
+          </label>
+          <textarea
+            id="content"
+            name="content"
+            value={formData.content}
+            onChange={handleInputChange}
+            required
+            rows={10}
+            className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-academic-500 focus:border-transparent"
+            placeholder="Write your blog content here..."
+          />
+        </div>
+
+        <div>
+          <label htmlFor="tags" className="block text-sm font-medium text-academic-700 mb-2">
+            Tags
+          </label>
+          <input
+            type="text"
+            id="tags"
+            name="tags"
+            value={formData.tags.join(', ')}
+            onChange={handleTagsChange}
+            className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-academic-500 focus:border-transparent"
+            placeholder="tag1, tag2, tag3"
+          />
+          <p className="text-sm text-academic-500 mt-1">
+            Separate tags with commas
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="cover-image" className="block text-sm font-medium text-academic-700 mb-2">
+            Cover Image
+          </label>
+          {blog.cover_image_url && (
+            <div className="mb-4">
+              <img
+                src={blog.cover_image_url}
+                alt="Current cover image"
+                className="h-32 w-auto rounded-lg object-cover"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="mt-2 px-3 py-1 text-sm text-red-600 hover:text-red-800"
+              >
+                Remove current image
+              </button>
+            </div>
+          )}
+          <input
+            type="file"
+            id="cover-image"
+            name="cover-image"
+            onChange={handleImageChange}
+            accept="image/*"
+            className="w-full px-3 py-2 border border-academic-300 rounded-md focus:outline-none focus:ring-2 focus:ring-academic-500 focus:border-transparent"
+          />
+          <p className="text-sm text-academic-500 mt-1">
+            {blog.cover_image_url ? 'Upload a new image to replace the current one' : 'Upload a cover image for your blog post'}
+          </p>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="published"
+            name="published"
+            checked={formData.published}
+            onChange={(e) => setFormData(prev => ({ ...prev, published: e.target.checked }))}
+            className="h-4 w-4 text-academic-600 focus:ring-academic-500 border-academic-300 rounded"
+          />
+          <label htmlFor="published" className="ml-2 block text-sm text-academic-700">
+            Publish this blog
+          </label>
+        </div>
+
+        <div className="flex justify-end space-x-4">
           <button
             type="button"
             onClick={() => navigate('/admin/manage-blogs')}
-            className="mr-4 p-2 rounded-full hover:bg-academic-100 transition-all duration-200"
-            aria-label="Back to blog list"
+            className="px-4 py-2 border border-academic-300 text-academic-700 rounded-md hover:bg-academic-50 focus:outline-none focus:ring-2 focus:ring-academic-500"
           >
-            <ArrowLeftIcon className="h-5 w-5 text-academic-600" />
+            Cancel
           </button>
-          <h2 className="text-2xl font-serif font-semibold text-academic-900">Edit Blog Post</h2>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-academic-600 text-white rounded-md hover:bg-academic-700 focus:outline-none focus:ring-2 focus:ring-academic-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Updating...' : 'Update Blog Post'}
+          </button>
         </div>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-academic-700 mb-1">
-              Title
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <DocumentTextIcon className="h-5 w-5 text-academic-400" />
-              </div>
-              <input
-                type="text"
-                id="title"
-                {...register('title', { required: 'Title is required' })}
-                className={`pl-10 block w-full border ${errors.title ? 'border-red-300' : 'border-academic-300'} rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200`}
-                placeholder="Enter blog post title"
-              />
-              {errors.title && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
-                </div>
-              )}
-            </div>
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-            )}
-          </div>
-          
-          {/* Tags */}
-          <div>
-            <label htmlFor="tags" className="block text-sm font-medium text-academic-700 mb-1">
-              Tags (comma separated)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <TagIcon className="h-5 w-5 text-academic-400" />
-              </div>
-              <input
-                type="text"
-                id="tags"
-                {...register('tags')}
-                className="pl-10 block w-full border border-academic-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200"
-                placeholder="academic, research, digital-humanities"
-              />
-            </div>
-            <p className="mt-1 text-xs text-academic-500">Separate tags with commas</p>
-          </div>
-          
-          {/* Cover Image */}
-          <div>
-            <label className="block text-sm font-medium text-academic-700 mb-1">
-              Cover Image
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-academic-200 border-dashed rounded-md bg-academic-50 transition-colors duration-200 hover:border-primary-300 hover:bg-academic-100">
-              <div className="space-y-1 text-center">
-                {imagePreview ? (
-                  <div className="relative">
-                    <img 
-                      src={imagePreview} 
-                      alt="Cover preview" 
-                      className="mx-auto h-48 object-cover rounded shadow-academic"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleClearImage}
-                      className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 transition-colors duration-200 shadow-md"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <PhotoIcon className="mx-auto h-12 w-12 text-academic-400" />
-                )}
-                <div className="flex text-sm text-academic-600 justify-center">
-                  <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200">
-                    <span>{existingImageUrl ? 'Replace image' : 'Upload a file'}</span>
-                    <input 
-                      id="file-upload" 
-                      name="file-upload" 
-                      type="file"
-                      ref={fileInputRef}
-                      className="sr-only" 
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className="text-xs text-academic-500">PNG, JPG, GIF up to 5MB</p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Content Editor */}
-          <div>
-            <label htmlFor="content" className="block text-sm font-medium text-academic-700 mb-1">
-              Content
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              rows={15}
-              {...register('content', { required: 'Content is required' })}
-              className="w-full px-4 py-2 border border-academic-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              placeholder="Write your blog post content here..."
-            />
-            {errors.content && (
-              <p className="mt-1 text-sm text-red-600">{errors.content.message}</p>
-            )}
-          </div>
-          
-          {/* Published Status */}
-          <div className="flex items-center bg-academic-50 p-3 rounded-lg">
-            <input
-              id="published"
-              type="checkbox"
-              {...register('published')}
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-academic-300 rounded transition-colors duration-200"
-            />
-            <label htmlFor="published" className="ml-2 block text-sm text-academic-700">
-              Published
-            </label>
-          </div>
-          
-          {/* Buttons */}
-          <div className="flex justify-end pt-4 border-t border-academic-100">
-            <button
-              type="button"
-              onClick={() => navigate('/admin/manage-blogs')}
-              className="mr-4 px-4 py-2 border border-academic-300 rounded-md shadow-sm text-sm font-medium text-academic-700 bg-white hover:bg-academic-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 transform hover:-translate-y-0.5"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-70 transition-all duration-200 transform hover:-translate-y-0.5"
-            >
-              {isSaving ? (
-                <div className="flex items-center">
-                  <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin mr-2"></div>
-                  Saving...
-                </div>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
-        </form>
+      </form>
+
+      <div className="bg-academic-50 border border-academic-200 rounded-lg p-4">
+        <h3 className="text-lg font-medium text-academic-900 mb-2">Blog Information</h3>
+        <p className="text-academic-600">Blog ID: {blog.id}</p>
+        <p className="text-academic-600">Created: {new Date(blog.created_at).toLocaleDateString()}</p>
+        <p className="text-academic-600">Last Updated: {new Date(blog.updated_at).toLocaleDateString()}</p>
+        <p className="text-academic-600">Author ID: {blog.author_id}</p>
       </div>
     </div>
   );

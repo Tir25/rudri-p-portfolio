@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom';
-import { useAuthContext } from '../context/AuthContext';
+import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
 
 export default function Admin() {
-  const { user, isOwner, loading } = useAuthContext();
+  const { user, isOwner, loading } = useSupabaseAuth();
 
   // Show loading state
   if (loading) {

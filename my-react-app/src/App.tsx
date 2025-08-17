@@ -1,36 +1,35 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthContextProvider } from './context/AuthContext';
-import ScrollToTop from './components/ScrollToTop';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminLayout from './components/AdminLayout';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import { SupabaseAuthProvider } from './context/SupabaseAuthContext'
+import ScrollToTop from './components/ScrollToTop'
+import SupabaseProtectedRoute from './components/SupabaseProtectedRoute'
+import SupabaseAdminLayout from './components/SupabaseAdminLayout'
 
 // Pages
-import Home from './pages/Home';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import Papers from './pages/Papers';
-import ResearchPapers from './pages/ResearchPapers';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Unauthorized from './pages/Unauthorized';
-// import Admin from './pages/Admin';
-import AdminPage from './pages/AdminPage';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminProfile from './pages/AdminProfile';
-import AdminAddBlog from './pages/AdminAddBlog';
-import AdminEditBlog from './pages/AdminEditBlog';
-import AdminManageBlogs from './pages/AdminManageBlogs';
-import AdminUploadPapers from './pages/AdminUploadPapers';
-import AdminManagePapers from './pages/AdminManagePapers';
-import AdminSyncPapers from './pages/AdminSyncPapers';
+import Home from './pages/Home'
+import Blog from './pages/Blog'
+import BlogPost from './pages/BlogPost'
+import Papers from './pages/Papers'
+import ResearchPapers from './pages/ResearchPapers'
+import SupabaseLogin from './pages/SupabaseLogin'
+import Register from './pages/Register'
+import Unauthorized from './pages/Unauthorized'
+import SupabaseAdminPage from './pages/SupabaseAdminPage'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminProfile from './pages/AdminProfile'
+import AdminAddBlog from './pages/AdminAddBlog'
+import AdminEditBlog from './pages/AdminEditBlog'
+import AdminManageBlogs from './pages/AdminManageBlogs'
+import AdminUploadPapers from './pages/AdminUploadPapers'
+import AdminManagePapers from './pages/AdminManagePapers'
+import AdminSyncPapers from './pages/AdminSyncPapers'
 
 // Layouts
-import MainLayout from './layouts/MainLayout';
+import MainLayout from './layouts/MainLayout'
 
 function App() {
   return (
-    <AuthContextProvider>
+    <SupabaseAuthProvider>
       <Router>
         <ScrollToTop />
         <Toaster position="top-center" containerStyle={{ top: 10 }} />
@@ -41,93 +40,93 @@ function App() {
           <Route path="/blog/:slug" element={<MainLayout><BlogPost /></MainLayout>} />
           <Route path="/papers" element={<MainLayout><Papers /></MainLayout>} />
           <Route path="/research" element={<MainLayout><ResearchPapers /></MainLayout>} />
-          <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
+          <Route path="/login" element={<MainLayout><SupabaseLogin /></MainLayout>} />
           <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
           <Route path="/unauthorized" element={<MainLayout><Unauthorized /></MainLayout>} />
 
 
           {/* Admin Routes */}
           <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminPage />
-            </ProtectedRoute>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminPage />
+            </SupabaseProtectedRoute>
           } />
           
           {/* Admin Routes with AdminLayout */}
           <Route path="/admin/dashboard" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminDashboard />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           <Route path="/admin/profile" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminProfile />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           <Route path="/admin/add-blog" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminAddBlog />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           <Route path="/admin/edit-blog/:id" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminEditBlog />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           <Route path="/admin/manage-blogs" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminManageBlogs />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           <Route path="/admin/upload-papers" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminUploadPapers />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           <Route path="/admin/manage-papers" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminManagePapers />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
 
           <Route path="/admin/sync-papers" element={
-            <ProtectedRoute>
-              <AdminLayout>
+            <SupabaseProtectedRoute requireOwner>
+              <SupabaseAdminLayout>
                 <AdminSyncPapers />
-              </AdminLayout>
-            </ProtectedRoute>
+              </SupabaseAdminLayout>
+            </SupabaseProtectedRoute>
           } />
           
           {/* Catch-all route for any undefined admin paths */}
           <Route path="/admin/*" element={
-            <ProtectedRoute>
+            <SupabaseProtectedRoute requireOwner>
               <Navigate to="/admin/dashboard" replace />
-            </ProtectedRoute>
+            </SupabaseProtectedRoute>
           } />
         </Routes>
       </Router>
-    </AuthContextProvider>
-  );
+    </SupabaseAuthProvider>
+  )
 }
 
-export default App;
+export default App

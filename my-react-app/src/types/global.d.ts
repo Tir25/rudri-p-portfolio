@@ -11,20 +11,7 @@ declare module '*.js' {
 }
 
 // Declare modules that don't have type definitions
-declare module '../context/AuthContext' {
-  export const AuthContextProvider: React.ComponentType<unknown>;
-  export const useAuthContext: () => unknown;
-}
-
-declare module '../components/ProtectedRoute' {
-  const ProtectedRoute: React.ComponentType<unknown>;
-  export default ProtectedRoute;
-}
-
-declare module '../components/ImageUploader' {
-  const ImageUploader: React.ComponentType<unknown>;
-  export default ImageUploader;
-}
+// Note: Old authentication modules have been removed and replaced with Supabase
 
 // Global types
 declare global {
