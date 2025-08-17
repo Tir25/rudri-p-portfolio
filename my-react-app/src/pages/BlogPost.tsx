@@ -11,13 +11,18 @@ export default function BlogPost() {
   const loadBlog = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🔍 loadBlog called with slug:', slug);
       const blogData = await getBlog(slug!);
+      console.log('🔍 getBlog result:', blogData);
       if (!blogData) {
+        console.log('❌ Blog not found');
         setError('Blog post not found');
         return;
       }
+      console.log('✅ Blog loaded successfully:', blogData.title);
       setBlog(blogData);
     } catch (err) {
+      console.error('❌ Error loading blog:', err);
       setError(err instanceof Error ? err.message : 'Failed to load blog post');
     } finally {
       setLoading(false);

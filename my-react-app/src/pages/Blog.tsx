@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getPublishedBlogs, type Blog } from '../services/supabaseBlogService';
 
 export default function Blog() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadBlogs();
@@ -41,6 +42,16 @@ export default function Blog() {
     const wordCount = content.split(/\s+/).length;
     const readTime = Math.ceil(wordCount / wordsPerMinute);
     return `${readTime} min read`;
+  };
+
+  const handleReadMore = (slug: string) => {
+    console.log('🔍 handleReadMore called with slug:', slug);
+    try {
+      navigate(`/blog/${slug}`);
+      console.log('✅ Navigation successful to:', `/blog/${slug}`);
+    } catch (error) {
+      console.error('❌ Navigation error:', error);
+    }
   };
 
   if (loading) {
@@ -132,7 +143,7 @@ export default function Blog() {
                     {truncateText(blog.content, 150)}
                   </p>
                   
-                  {blog.tags.length > 0 && (
+                  {blog.tags && blog.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {blog.tags.slice(0, 3).map((tag, index) => (
                         <span
@@ -150,15 +161,20 @@ export default function Blog() {
                     </div>
                   )}
                   
-                  <Link
-                    to={`/blog/${blog.slug}`}
-                    className="inline-flex items-center text-academic-600 hover:text-academic-800 font-medium transition-colors duration-200"
+                  <button
+                    onClick={() => handleReadMore(blog.slug)}
+                    className="inline-flex items-center text-academic-600 hover:text-academic-800 font-medium transition-colors duration-200 group"
                   >
                     Read more
-                    <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg 
+                      className="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </Link>
+                  </button>
                 </div>
               </article>
             ))}

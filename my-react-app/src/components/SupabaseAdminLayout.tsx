@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useSupabaseAuth } from '../hooks/useSupabaseAuth'
 import { toast } from 'react-hot-toast'
+import SocialMediaCube from './SocialMediaCube'
 
 interface SupabaseAdminLayoutProps {
   children: React.ReactNode
@@ -255,6 +256,9 @@ export default function SupabaseAdminLayout({ children }: SupabaseAdminLayoutPro
             </div>
           </div>
         </main>
+
+        {/* Social Media Cube */}
+        <SocialMediaCube />
       </div>
     </div>
   )

@@ -9,14 +9,8 @@ export const checkOwnerEmail = (email) => {
   // Get the owner email from environment variables or fallback
   const ownerEmail = import.meta.env.VITE_OWNER_EMAIL || 'admin@rudridave.com';
   
-  // Log for debugging
-  console.log('Checking owner email:');
-  console.log('- Current user email:', email);
-  console.log('- Configured owner email:', ownerEmail);
-  
-  // Check if they match
+  // Check if they match (removed debug logs for security)
   const isMatch = email === ownerEmail;
-  console.log('- Is match:', isMatch);
   
   return isMatch;
 };

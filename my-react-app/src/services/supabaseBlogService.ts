@@ -115,12 +115,26 @@ export async function getAllBlogs(): Promise<Blog[]> {
 
 // Get blog by ID or slug
 export async function getBlog(idOrSlug: string): Promise<Blog | null> {
-  const { data, error } = await supabase
+  // First try to find by slug
+  let { data, error } = await supabase
     .from('blogs')
     .select('*')
-    .or(`id.eq.${idOrSlug},slug.eq.${idOrSlug}`)
+    .eq('slug', idOrSlug)
     .eq('published', true)
     .single();
+
+  // If not found by slug, try by ID
+  if (error && error.code === 'PGRST116') {
+    const { data: dataById, error: errorById } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('id', idOrSlug)
+      .eq('published', true)
+      .single();
+    
+    data = dataById;
+    error = errorById;
+  }
 
   if (error) {
     if (error.code === 'PGRST116') {

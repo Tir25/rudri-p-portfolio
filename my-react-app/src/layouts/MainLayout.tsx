@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
+import SocialMediaCube from '../components/SocialMediaCube';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -36,6 +37,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main content */}
       <main>{children}</main>
+
+      {/* Social Media Cube */}
+      <SocialMediaCube />
 
       {/* Footer */}
       <footer className="bg-white border-t border-academic-200 mt-auto">
