@@ -15,16 +15,33 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your .env file.')
 }
 
-// Validate URL format
-try {
-  new URL(supabaseUrl)
-  console.log('✅ Supabase URL is valid')
-} catch (error) {
-  console.error('❌ Invalid Supabase URL:', supabaseUrl)
-  throw new Error(`Invalid Supabase URL: ${supabaseUrl}`)
+// Ensure URL is properly formatted
+let cleanUrl = supabaseUrl.trim()
+if (!cleanUrl.startsWith('https://')) {
+  cleanUrl = `https://${cleanUrl}`
+}
+if (cleanUrl.endsWith('/')) {
+  cleanUrl = cleanUrl.slice(0, -1)
 }
 
-// Create Supabase client with minimal configuration
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+console.log('🔧 Cleaned URL:', cleanUrl)
+
+// Validate URL format
+try {
+  new URL(cleanUrl)
+  console.log('✅ Supabase URL is valid')
+} catch (error) {
+  console.error('❌ Invalid Supabase URL:', cleanUrl)
+  throw new Error(`Invalid Supabase URL: ${cleanUrl}`)
+}
+
+// Create Supabase client with explicit configuration
+export const supabase = createClient(cleanUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
 
 console.log('✅ Supabase client created successfully')
